@@ -1,0 +1,7 @@
+{
+  "appId": "com.spacesurvival.boxy",
+  "appName": "نجاة الكوكب الفضائي",
+  "webDir": ".",
+  "server": { "androidScheme": "https" },
+  "android": { "allowMixedContent": true }
+}

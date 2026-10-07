@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b1026">
+<title>نجاة الكوكب الفضائي 👾 | Space Survival</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛸</text></svg>">
+<link rel="stylesheet" href="css/style.css">
+<link rel="manifest" href="manifest.json">
+</head>
+<body>
+<div id="rotate-hint">🔄 أدر هاتفك أفقياً للعب (16:9)<br><small>Turn your phone to landscape</small></div>
+
+<canvas id="game-canvas"></canvas>
+
+<!-- شاشة البداية -->
+<div id="start-screen" class="overlay">
+  <div class="panel">
+    <h1>🛸 نجاة الكوكب الفضائي</h1>
+    <p class="subtitle">كوكب <b>زورق-7</b> • سفينتك محطمة • الأكسجين ينفد!</p>
+    <div class="help-box">
+      <div>🫁 <b>الأكسجين</b> ينقص خارج السفينة — ادخل <b>السفينة المحطمة</b> لتتنفس</div>
+      <div>🎒 اجمع <b>الفواكه الغريبة</b> والعبوات — كُل لتشفى</div>
+      <div>📦 كل شيء مربعات! خفيف: فقط ما تراه الشاشة موجود فعلاً</div>
+      <div>🕹️ عصا يسار للحركة • أزرار يمين: قفز / جمع / أكل</div>
+    </div>
+    <button id="btn-start" class="big-btn">🚀 ابدأ النجاة</button>
+    <div class="tiny">أفقي 16:9 • يعمل باللمس والكيبورد (WASD + مسافة + E)</div>
+  </div>
+</div>
+
+<!-- HUD علوي -->
+<div id="hud" class="hidden">
+  <div class="bars">
+    <div class="bar-row">
+      <span class="bar-label">🫁 O₂</span>
+      <div class="bar"><div id="oxygen-fill" class="fill oxygen"></div><span id="oxygen-text">100</span></div>
+    </div>
+    <div class="bar-row">
+      <span class="bar-label">❤️ HP</span>
+      <div class="bar"><div id="health-fill" class="fill health"></div><span id="health-text">100</span></div>
+    </div>
+  </div>
+  <div id="status-chips">
+    <span id="chip-ship" class="chip hidden">🛡️ داخل السفينة: تتنفس</span>
+    <span id="chip-perf" class="chip perf">👁️ 0/0</span>
+  </div>
+  <div class="top-btns">
+    <button id="btn-inventory-open" class="icon-btn">🎒</button>
+    <button id="btn-help" class="icon-btn">؟</button>
+    <button id="btn-mute" class="icon-btn">🔊</button>
+  </div>
+</div>
+
+<!-- شريط سريع مثل ماين كرافت -->
+<div id="hotbar" class="hidden"></div>
+
+<!-- أزرار اللمس -->
+<div id="touch-controls" class="hidden">
+  <div id="joystick"><div id="stick"></div></div>
+  <div class="action-btns">
+    <button id="btn-jump" class="act">⬆️<small>قفز</small></button>
+    <button id="btn-collect" class="act">✋<small>جمع</small></button>
+    <button id="btn-use" class="act">🍽️<small>أكل</small></button>
+    <button id="btn-o2" class="act o2">🫁<small>O₂</small></button>
+  </div>
+</div>
+
+<!-- انفنتوري -->
+<div id="inventory-modal" class="overlay hidden">
+  <div class="panel inv-panel">
+    <h2>🎒 الحقيبة <button id="btn-inventory-close" class="icon-btn">✖</button></h2>
+    <p class="tiny">اضغط على عنصر لتحديده ثم زر استخدام. الأكل يشفي، عبوة O₂ تعبئ الأكسجين.</p>
+    <div id="inv-grid"></div>
+    <div class="inv-actions">
+      <button id="btn-consume" class="big-btn small">🍽️ استخدام المحدد</button>
+      <button id="btn-drop" class="ghost-btn">🗑️ رمي</button>
+    </div>
+    <div id="inv-info">اختر عنصراً…</div>
+  </div>
+</div>
+
+<!-- مساعدة -->
+<div id="help-modal" class="overlay hidden">
+  <div class="panel">
+    <h2>❓ كيف تنجو؟</h2>
+    <ul class="help-list">
+      <li>🛸 <b>السفينة الرمادية الكبيرة</b> فيها أكسجين دائم + عبوات O₂ تظهر كل فترة.</li>
+      <li>🫁 خارج السفينة الأكسجين ينقص. إذا وصل 0، صحتك تنقص!</li>
+      <li>🍄 الفواكه الغريبة: <span class="c-purple">زرقان</span>، <span class="c-cyan">فطر الفقاعة</span>، <span class="c-orange">البلورة النجمية</span>، <span class="c-green">نعناع فضائي</span>، <span class="c-pink">بيضة سحابية</span>.</li>
+      <li>⚡ نظام الخفة: عداد <b>👁️</b> بالأعلى يعرض العناصر النشطة / الكلية — البعيد مخفي تماماً.</li>
+      <li>⌨️ كيبورد: WASD تحرك، مسافة قفز، E جمع، Q أكل، O عبوة O₂.</li>
+    </ul>
+    <button id="btn-help-close" class="big-btn small">فهمت!</button>
+  </div>
+</div>
+
+<!-- موت -->
+<div id="death-screen" class="overlay hidden">
+  <div class="panel">
+    <h1>💀 نفدت نجاتك!</h1>
+    <p id="death-stats"></p>
+    <button id="btn-respawn" class="big-btn">🔄 إحياء عند السفينة</button>
+  </div>
+</div>
+
+<div id="toast" class="hidden"></div>
+
+<script type="importmap">
+{ "imports": { "three": "./libs/three.module.min.js" } }
+</script>
+<script type="module" src="js/game.js"></script>
+</body>
+</html>
